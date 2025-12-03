@@ -58,16 +58,16 @@ public class Database {
             }
         }
 
-        String insertSql = "INSERT INTO users (username, password, role) VALUE (?, ?, ?)";
+        String insertSql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
 
         try (PreparedStatement ps = connection.prepareStatement(insertSql)) {
             ps.setString(1, "user");
-            ps.setString(2, "user123");
+            ps.setString(2, PasswordHasher.hash("user123"));
             ps.setString(3, "USER");
             ps.executeUpdate();
 
             ps.setString(1, "admin");
-            ps.setString(2, "admin123");
+            ps.setString(2, PasswordHasher.hash("admin123"));
             ps.setString(3, "ADMIN");
             ps.executeUpdate();
         }
