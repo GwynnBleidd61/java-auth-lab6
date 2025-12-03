@@ -2,6 +2,8 @@ package org.example.auth;
 
 public class App {
     static void main() {
-        System.out.println("System Auth System starting...");
+        System.out.println("Simple Auth System starting...");
+        Database.init();
+        System.out.println("Готово, можно двигаться дальше.");
     }
 }
