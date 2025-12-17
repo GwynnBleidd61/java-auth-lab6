@@ -16,11 +16,41 @@ public class App {
 
     private static void runConsole() {
         Scanner scanner = new Scanner(System.in);
-        String choice = scanner.nextLine().trim();
+        boolean running = true;
 
-        switch (choice) {
-            case "1"
+        while (running) {
+            printMenu();
+            System.out.println("Выберите пункт меню: ");
+            String choice = scanner.nextLine().trim();
+
+            switch (choice) {
+                case "1" -> handleLogin(scanner);
+                case "2" -> handlePublicResource();
+                case "3" -> handleUserResource();
+                case "4" -> handleAdminResource();
+                case "5" -> handleLogout();
+                case "0" -> {
+                    running = false;
+                    System.out.println("Выход из программы. До свидания!");
+                }
+                default -> System.out.println("Неизвестный пункт меню. Попробуйте ещё раз.");
+            }
+
+            System.out.println();
         }
+
+        scanner.close();
+    }
+
+    private static void printMenu() {
+        System.out.println("---------------");
+        System.out.println("Текущий пользователь: " + getCurrentUsernameOrGuest());
+        System.out.println("1. Войти (логин)");
+        System.out.println("2. Публичный ресурс (доступен всем)");
+        System.out.println("3. Пользовательский ресурс (требует роли USER)");
+        System.out.println("4. Админский ресурс (требует роли ADMIN)");
+        System.out.println("5. Выйти из аккаунта (logout)");
+        System.out.println("0. Выход");
     }
 
     private static String getCurrentUsernameOrGuest() {
@@ -56,6 +86,11 @@ public class App {
         }
     }
 
+    private static void handlePublicResource() {
+        System.out.println("[Публичный ресурс]");
+        System.out.println("Эта информация доступна всем, даже без входа в систему.");
+    }
+
     private static void handleUserResource() {
         if (currentToken == null || !AuthorizationService.isAuthenticated(currentToken)) {
             System.out.println("Вы не залогинены. Пожалуйста войдите в систему (пункт 1).");
@@ -74,7 +109,33 @@ public class App {
         System.out.println("Это ваша пользовательская панель (доступна ролям USER и ADMIN).");
     }
 
-    private
+    private static void handleAdminResource() {
+        if (currentToken == null || !AuthorizationService.isAuthenticated(currentToken)) {
+            System.out.println("Вы не залогинены. Пожалуйста, войдите в систему (пункт 1).");
+            return;
+        }
 
+        boolean allowed = AuthorizationService.canAccess(currentToken, "VIEW_ADMIN_PANEL");
+        if (!allowed) {
+            System.out.println("Доступ к админскому ресурсу запрещён. Нужна роль ADMIN.");
+            return;
+        }
+
+        User user = SessionManager.getUserByToken(currentToken);
+        System.out.println("[Админский ресурс]");
+        System.out.println("Здравствуйте, Администратор " + user.getUsername() + "!");
+        System.out.println("Здесь может быть управление пользователями, логами и т.д.");
+    }
+
+    private static void handleLogout() {
+        if (currentToken == null) {
+            System.out.println("Вы не залогинены.");
+            return;
+        }
+
+        SessionManager.endSession(currentToken);
+        currentToken = null;
+        System.out.println("Вы вышли из системы");
+    }
 }
 
