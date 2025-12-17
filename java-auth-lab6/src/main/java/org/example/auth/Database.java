@@ -45,6 +45,25 @@ public class Database {
         }
     }
 
+    public static void updateUserPasswordHash(long userId, String newPasswordHash) {
+        String sql = "UPDATE users SET password = ? WHERE id = ?";
+
+        try (Connection conn = getConnection();
+        PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, newPasswordHash);
+            ps.setLong(2, userId);
+
+            int updated = ps.executeUpdate();
+            if (updated != 1) {
+                throw new RuntimeException("Пароль не обновлён: userId=" + userId);
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Ошибка обновления пароля в БД", e);
+        }
+    }
+
     private static void insertTestUsersIfEmpty(Connection connection) throws SQLException {
         String countSql = "SELECT COUNT(*) FROM users";
         try (Statement stmt = connection.createStatement();

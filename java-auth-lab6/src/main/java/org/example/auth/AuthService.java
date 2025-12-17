@@ -30,6 +30,32 @@ public class AuthService {
         return token;
     }
 
+    public static boolean changePassword(String token, String oldPassword, String newPassword) {
+        User user = SessionManager.getUserByToken(token);
+        if (user == null) {
+            System.out.println("Сессия недействительна. Выполните вход заново.");
+            return false;
+        }
+
+        if (!PasswordHasher.verify(oldPassword, user.getPasswordHash())) {
+            System.out.println("Старый пароль неверен.");
+            return false;
+        }
+
+        if (newPassword == null || newPassword.length() < 6) {
+            System.out.println("Новый пароль слишком короткий (минимум 6 символов)");
+            return false;
+        }
+
+        String newHash = PasswordHasher.hash(newPassword);
+        Database.updateUserPasswordHash(user.getId(), newHash);
+
+        SessionManager.endSession(token);
+
+        System.out.println("Пароль успешно изменен. Пожалуйста войдите снова.");
+        return true;
+    }
+
     private static User findUserByUsername(String username) {
         String sql = "SELECT id, username, password, role FROM users WHERE username = ?";
 
@@ -53,4 +79,5 @@ public class AuthService {
 
         return null;
     }
+
 }
