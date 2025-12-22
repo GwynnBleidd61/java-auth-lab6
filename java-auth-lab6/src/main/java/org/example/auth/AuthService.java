@@ -1,5 +1,6 @@
 package org.example.auth;
 
+import javax.xml.crypto.Data;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -55,6 +56,39 @@ public class AuthService {
         System.out.println("Пароль успешно изменен. Пожалуйста войдите снова.");
         return true;
     }
+
+
+    public static boolean changeUserRole(String adminToken, String targetUsername, String newRole) {
+        User admin = SessionManager.getUserByToken(adminToken);
+        if (admin == null) {
+            System.out.println("Сессия недействительна. Войдите снова");
+            return false;
+        }
+
+        if (!AuthorizationService.canAccess(adminToken, "MANAGE_USERS")) {
+            System.out.println("Доступ зарпрещён. Нужны права администратора (MANAGE_USERS).");
+            return false;
+        }
+
+        String roleUpper = newRole == null ? "" : newRole.trim().toUpperCase();
+        if(!roleUpper.equals("USER") && !roleUpper.equals("ADMIN")) {
+            System.out.println("Недопустимая роль. Разрешены: USER, ADMIN");
+            return false;
+        }
+
+        User target = Database.findUserByUsername(targetUsername);
+        if (target == null) {
+            System.out.println("Пользователь не найден: " + targetUsername);
+            return false;
+        }
+
+        Database.updateUserRole(target.getId(), roleUpper);
+
+        System.out.println("Роль пользователя " + targetUsername + " изменена на " + roleUpper);
+
+        return true;
+    }
+
 
     private static User findUserByUsername(String username) {
         String sql = "SELECT id, username, password, role FROM users WHERE username = ?";

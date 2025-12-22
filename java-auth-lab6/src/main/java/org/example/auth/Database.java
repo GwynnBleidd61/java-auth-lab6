@@ -64,6 +64,49 @@ public class Database {
         }
     }
 
+    public static void updateUserRole(long userId, String newRole) {
+        String sql = "UPDATE users SET role = ? WHERE id = ?";
+
+        try (Connection conn = getConnection();
+        PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, newRole);
+            ps.setLong(2, userId);
+
+            int updated = ps.executeUpdate();
+            if (updated != 1) {
+                throw new RuntimeException("Роль не обновлена: userId=" + userId);
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Ошибка обновления роли в БД", e);
+        }
+    }
+
+    public static User findUserByUsername(String username) {
+        String sql = "SELECT id, username, password, role FROM users WHERE username = ?";
+
+        try (Connection conn = getConnection();
+        PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, username);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return new User(
+                        rs.getLong("id"),
+                        rs.getString("username"),
+                        rs.getString("password"),
+                        rs.getString("role")
+                );
+            }
+            return null;
+        } catch (SQLException e) {
+            throw new RuntimeException("Ошибка поиска пользователя в БД", e);
+        }
+    }
+
+
     private static void insertTestUsersIfEmpty(Connection connection) throws SQLException {
         String countSql = "SELECT COUNT(*) FROM users";
         try (Statement stmt = connection.createStatement();
